@@ -1023,6 +1023,17 @@ void DrawAABB(
 }
 
 
+// OBBの描画
+void DrawOBB(
+	const OBB& obb,
+	const Matrix4x4& viewProjection,
+	const Matrix4x4& viewport,
+	uint32_t color) {
+
+	Vector3 verticles[8]{};
+}
+
+
 // 球の当たり判定
 namespace SphereToShere {
 	bool onCollision(const Sphere& s1, const Sphere& s2) {

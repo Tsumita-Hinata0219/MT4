@@ -136,9 +136,16 @@ void DrawTriAngle(
 	const Matrix4x4& viewportMatrix,
 	unsigned int color);
 
-// AABbの描画
+// AABBの描画
 void DrawAABB(
 	const AABB& aabb,
+	const Matrix4x4& viewProjection,
+	const Matrix4x4& viewport,
+	uint32_t color);
+
+// OBBの描画
+void DrawOBB(
+	const OBB& obb,
 	const Matrix4x4& viewProjection,
 	const Matrix4x4& viewport,
 	uint32_t color);
