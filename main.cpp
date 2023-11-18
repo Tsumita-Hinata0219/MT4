@@ -1,4 +1,6 @@
 #include <Novice.h>
+#include "MathFunction.h"
+#include "imgui.h"
 
 const char kWindowTitle[] = "LE2B_13_ツミタ_ヒナタ_MT4";
 
@@ -6,11 +8,16 @@ const char kWindowTitle[] = "LE2B_13_ツミタ_ヒナタ_MT4";
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	const int ScreenWidth = 1280;
+	const int ScreenHeight = 720;
+	Novice::Initialize(kWindowTitle, ScreenWidth, ScreenHeight);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
 	char preKeys[256] = {0};
+
+
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -25,6 +32,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
+
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -32,6 +41,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
+
+
 
 		///
 		/// ↑描画処理ここまで
