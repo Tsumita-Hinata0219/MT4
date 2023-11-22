@@ -17,6 +17,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char preKeys[256] = {0};
 
 
+	Vector3 axis = Normalize({ 1.0f, 1.0f, 1.0f });
+	float angle = 0.44f;
+
+
 	
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -32,8 +36,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		
 
+		Matrix4x4 rotateMatrix = MakeRotateAxisAngle(axis, angle);
 		
-
 
 		///
 		/// ↑更新処理ここまで
@@ -43,7 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-
+		MatrixScreenPrintf(0, 0, rotateMatrix, "rotateMatrix");
 
 
 		///

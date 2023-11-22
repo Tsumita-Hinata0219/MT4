@@ -17,7 +17,7 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 		for (int column = 0; column < 4; ++column) {
 			Novice::ScreenPrintf(x, y, "%s\n", label);
 			Novice::ScreenPrintf(
-				x + column * kColumnWidth, y + (row + 1) * kRowHeight, "%6.02f", matrix.m[row][column]);
+				x + column * kColumnWidth, y + (row + 1) * kRowHeight, "%.3f", matrix.m[row][column]);
 		}
 	}
 }
@@ -559,6 +559,44 @@ Matrix4x4 MakeRotateXYZMatrix(float radianX, float radianY, float radianZ) {
 	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(radianZ);
 
 	result = matrix::Multiply(rotateXMatrix, matrix::Multiply(rotateYMatrix, rotateZMatrix));
+
+	return result;
+}
+
+
+// 任意軸回転行列
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
+
+	float cosTheta = cosf(angle);
+	float sinTheta = sinf(angle);
+
+	Matrix4x4 result{};
+	result = MakeIdentity4x4();
+	
+
+	//result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
+	//result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
+	//result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) + axis.y * sinTheta;
+	//result.m[1][0] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
+	//result.m[1][1] = (axis.y * axis.y) * (1 - cosTheta) + cosTheta;
+	//result.m[1][2] = (axis.y * axis.z) * (1 - cosTheta) - axis.x * sinTheta;
+	//result.m[2][0] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
+	//result.m[2][1] = (axis.y * axis.z) * (1 - cosTheta) + axis.x * sinTheta;
+	//result.m[2][2] = (axis.z * axis.z) * (1 - cosTheta) + cosTheta;
+
+
+	result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
+	result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
+	result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
+
+	result.m[1][0] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
+	result.m[1][1] = (axis.y * axis.y) * (1 - cosTheta) + cosTheta;
+	result.m[1][2] = (axis.y * axis.z) * (1 - cosTheta) + axis.x * sinTheta;
+
+	result.m[2][0] = (axis.x * axis.z) * (1 - cosTheta) + axis.y * sinTheta;
+	result.m[2][1] = (axis.y * axis.z) * (1 - cosTheta) - axis.x * sinTheta;
+	result.m[2][2] = (axis.z * axis.z) * (1 - cosTheta) + cosTheta;
+
 
 	return result;
 }
