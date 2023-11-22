@@ -751,6 +751,31 @@ Vector3 Perpendicular(const Vector3& vector)
 }
 
 
+// OBBのワールドマトリックス作成
+namespace Obb {
+
+	Matrix4x4 CreateWorldMatrix(const OBB& obb) {
+
+		Matrix4x4 worldMatrix{};
+
+		for (int i = 0; i < 3; ++i) {
+			worldMatrix.m[i][0] = obb.orientations[i].x;
+			worldMatrix.m[i][1] = obb.orientations[i].y;
+			worldMatrix.m[i][2] = obb.orientations[i].z;
+			worldMatrix.m[i][3] = 0.0f;
+		}
+
+		worldMatrix.m[3][0] = obb.center.x;
+		worldMatrix.m[3][1] = obb.center.y;
+		worldMatrix.m[3][2] = obb.center.z;
+		worldMatrix.m[3][3] = 1.0f;
+
+
+		return worldMatrix;
+	}
+}
+
+
 // グリッドの描画
 void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 	//Gridの半分の幅
@@ -1031,191 +1056,304 @@ void DrawOBB(
 	uint32_t color) {
 
 	Vector3 verticles[8]{};
+
+	for (int i = 0; i < 8; ++i) {
+		Vector3 sign{};
+		sign.x = (i & 1) ? 1.0f : -1.0f;
+		sign.y = (i & 2) ? 1.0f : -1.0f;
+		sign.z = (i & 4) ? 1.0f : -1.0f;
+
+		verticles[i].x = obb.center.x +
+			sign.x * obb.orientations[0].x * obb.size.x +
+			sign.y * obb.orientations[1].x * obb.size.y +
+			sign.z * obb.orientations[2].x * obb.size.z;
+
+		verticles[i].y = obb.center.y +
+			sign.x * obb.orientations[0].y * obb.size.x +
+			sign.y * obb.orientations[1].y * obb.size.y +
+			sign.z * obb.orientations[2].y * obb.size.z;
+
+		verticles[i].z = obb.center.z +
+			sign.x * obb.orientations[0].z * obb.size.x +
+			sign.y * obb.orientations[1].z * obb.size.y +
+			sign.z * obb.orientations[2].z * obb.size.z;
+	};
+
+
+	Vector3 screenVerticles[8]{};
+	for (int i = 0; i < 8; i++) {
+		verticles[i] = Transform(verticles[i], viewProjection);
+		screenVerticles[i] = Transform(verticles[i], viewport);
+	}
+
+
+	Novice::DrawLine(int(screenVerticles[0].x), int(screenVerticles[0].y), int(screenVerticles[1].x), int(screenVerticles[1].y), color);
+	Novice::DrawLine(int(screenVerticles[0].x), int(screenVerticles[0].y), int(screenVerticles[2].x), int(screenVerticles[2].y), color);
+	Novice::DrawLine(int(screenVerticles[0].x), int(screenVerticles[0].y), int(screenVerticles[4].x), int(screenVerticles[4].y), color);
+
+	Novice::DrawLine(int(screenVerticles[1].x), int(screenVerticles[1].y), int(screenVerticles[3].x), int(screenVerticles[3].y), color);
+	Novice::DrawLine(int(screenVerticles[1].x), int(screenVerticles[1].y), int(screenVerticles[5].x), int(screenVerticles[5].y), color);
+
+	Novice::DrawLine(int(screenVerticles[2].x), int(screenVerticles[2].y), int(screenVerticles[3].x), int(screenVerticles[3].y), color);
+	Novice::DrawLine(int(screenVerticles[2].x), int(screenVerticles[2].y), int(screenVerticles[6].x), int(screenVerticles[6].y), color);
+
+	Novice::DrawLine(int(screenVerticles[3].x), int(screenVerticles[3].y), int(screenVerticles[7].x), int(screenVerticles[7].y), color);
+
+	Novice::DrawLine(int(screenVerticles[4].x), int(screenVerticles[4].y), int(screenVerticles[5].x), int(screenVerticles[5].y), color);
+	Novice::DrawLine(int(screenVerticles[4].x), int(screenVerticles[4].y), int(screenVerticles[6].x), int(screenVerticles[6].y), color);
+
+	Novice::DrawLine(int(screenVerticles[5].x), int(screenVerticles[5].y), int(screenVerticles[7].x), int(screenVerticles[7].y), color);
+
+	Novice::DrawLine(int(screenVerticles[6].x), int(screenVerticles[6].y), int(screenVerticles[7].x), int(screenVerticles[7].y), color);
 }
 
 
 // 球の当たり判定
-namespace SphereToShere {
-	bool onCollision(const Sphere& s1, const Sphere& s2) {
+bool SphereToShere::isCollision(const Sphere& s1, const Sphere& s2) {
 
-		// 中心からの距離
-		float distance = Length(vector::Subtract(s2.center, s1.center));
+	// 中心からの距離
+	float distance = Length(vector::Subtract(s2.center, s1.center));
 
-		// 距離と半径を比べる
-		if (distance <= s1.radius + s2.radius) {
+	// 距離と半径を比べる
+	if (distance <= s1.radius + s2.radius) {
 
-			// 当たってる
-			return true;
-		}
-		// 当たってない
-		return false;
+		// 当たってる
+		return true;
 	}
+	// 当たってない
+	return false;
 }
 
 
 // 球と面の当たり判定
-namespace SphereToPlane {
+bool SphereToPlane::isCollision(const Sphere& s, const Plane& p) {
 
-	bool onCollision(const Sphere& s1, const Plane& p1) {
+	// 距離
+	Vector3 newVector = {
+		s.center.x - p.distance,
+		s.center.y - p.distance,
+		s.center.z - p.distance, };
+	float distance = Dot(Normalize(p.normal), newVector);
 
-		// 距離
-		Vector3 newVector = {
-			s1.center.x - p1.distance,
-			s1.center.y - p1.distance,
-			s1.center.z - p1.distance, };
-		float distance = Dot(Normalize(p1.normal), newVector);
+	// 距離を比べる
+	if (std::abs(distance) <= s.radius) {
 
-		// 距離を比べる
-		if (std::abs(distance) <= s1.radius) {
-
-			// 当たってる
-			return true;
-		}
-		else {
-			// 当たってない
-			return false;
-		}
+		// 当たってる
+		return true;
+	}
+	else {
+		// 当たってない
+		return false;
 	}
 }
 
 
 // 線と平面の衝突判定
-namespace LineToPlane {
+bool LineToPlane::isCollision(const Segment& s, const Plane& p) {
 
-	bool onCollision(const Segment& s1, const Plane& p1) {
+	// 法線と線の内積
+	float dot = Dot(s.diff, p.normal);
 
-		// 法線と線の内積
-		float dot = Dot(s1.diff, p1.normal);
+	// 衝突 = 平行であるので、衝突しているはずがない
+	if (dot == 0.0f) {
 
-		// 衝突 = 平行であるので、衝突しているはずがない
-		if (dot == 0.0f) {
-
-			// 当たってない
-			return false;
-		}
-
-		// tを求める
-		float t = (p1.distance - Dot(s1.origin, p1.normal)) / dot;
-
-		// tの値と線の種類で衝突判定
-		if (0.0f <= t && t <= 1.0f) {
-
-			// 当たってる
-			return true;
-		}
 		// 当たってない
 		return false;
 	}
+
+	// tを求める
+	float t = (p.distance - Dot(s.origin, p.normal)) / dot;
+
+	// tの値と線の種類で衝突判定
+	if (0.0f <= t && t <= 1.0f) {
+
+		// 当たってる
+		return true;
+	}
+	// 当たってない
+	return false;
 }
 
 
 // 三角形と線の当たり判定
-namespace TriangleToLine {
+bool TriangleToLine::isCollision(const Triangle& t, const Segment& s) {
 
-	bool onCollision(const Triangle& t1, const Segment& s1) {
-
-		// 平面を作る
-		Plane p1{};
-		p1.normal = Normalize(
-			Cross(vector::Subtract(t1.vertices[1], t1.vertices[0]),
-				vector::Subtract(t1.vertices[2], t1.vertices[1])));
-		p1.distance = Dot(t1.vertices[0], p1.normal);
+	// 平面を作る
+	Plane p1{};
+	p1.normal = Normalize(
+		Cross(vector::Subtract(t.vertices[1], t.vertices[0]),
+			vector::Subtract(t.vertices[2], t.vertices[1])));
+	p1.distance = Dot(t.vertices[0], p1.normal);
 
 
-		// 法線と線の内積
-		float dot = Dot(s1.diff, p1.normal);
+	// 法線と線の内積
+	float dot = Dot(s.diff, p1.normal);
 
-		// 衝突 = 平行であるので、衝突しているはずがない
-		if (dot == 0.0f) {
+	// 衝突 = 平行であるので、衝突しているはずがない
+	if (dot == 0.0f) {
 
-			// 当たってない
-			return false;
-		}
-
-		// tを求める
-		float t = (p1.distance - Dot(s1.origin, p1.normal)) / dot;
-
-		// tの値と線の種類で衝突判定
-		if (0.0f <= t && t <= 1.0f) {
-
-			// 衝突点
-			Vector3 td = {
-				s1.diff.x * t,
-				s1.diff.y * t,
-				s1.diff.z * t, };
-			Vector3 p = vector::Add(s1.origin, td);
-
-			// 各辺を結んだベクトルと、頂点と衝突点pを結んだベクトルのクロス積をとる
-			Vector3 cross01 = Cross(
-				vector::Subtract(t1.vertices[1], t1.vertices[0]),
-				vector::Subtract(p, t1.vertices[1]));
-
-			Vector3 cross12 = Cross(
-				vector::Subtract(t1.vertices[2], t1.vertices[1]),
-				vector::Subtract(p, t1.vertices[2]));
-
-			Vector3 cross20 = Cross(
-				vector::Subtract(t1.vertices[0], t1.vertices[2]),
-				vector::Subtract(p, t1.vertices[0]));
-
-
-			// すべての小三角形のクロス積と法線が同じ方向を向いていたら衝突	
-			if (Dot(cross01, p1.normal) >= 0.0f &&
-				Dot(cross12, p1.normal) >= 0.0f &&
-				Dot(cross20, p1.normal) >= 0.0f) {
-
-				// 当たっている
-				return true;
-			}
-		}
 		// 当たってない
 		return false;
 	}
-}
+
+	// tを求める
+	float t1 = (p1.distance - Dot(s.origin, p1.normal)) / dot;
+
+	// tの値と線の種類で衝突判定
+	if (0.0f <= t1 && t1 <= 1.0f) {
+
+		// 衝突点
+		Vector3 td = {
+			s.diff.x * t1,
+			s.diff.y * t1,
+			s.diff.z * t1, };
+		Vector3 p = vector::Add(s.origin, td);
+
+		// 各辺を結んだベクトルと、頂点と衝突点pを結んだベクトルのクロス積をとる
+		Vector3 cross01 = Cross(
+			vector::Subtract(t.vertices[1], t.vertices[0]),
+			vector::Subtract(p, t.vertices[1]));
+
+		Vector3 cross12 = Cross(
+			vector::Subtract(t.vertices[2], t.vertices[1]),
+			vector::Subtract(p, t.vertices[2]));
+
+		Vector3 cross20 = Cross(
+			vector::Subtract(t.vertices[0], t.vertices[2]),
+			vector::Subtract(p, t.vertices[0]));
 
 
-// AABBとAABBの当たり判定
-namespace AABBToAABB {
-
-	bool onCollision(const AABB& aabb1, const AABB& aabb2) {
-
-		if ((aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
-			(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
-			(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z)
-			) {
+		// すべての小三角形のクロス積と法線が同じ方向を向いていたら衝突	
+		if (Dot(cross01, p1.normal) >= 0.0f &&
+			Dot(cross12, p1.normal) >= 0.0f &&
+			Dot(cross20, p1.normal) >= 0.0f) {
 
 			// 当たっている
 			return true;
 		}
+	}
+	// 当たってない
+	return false;
+}
+
+
+// AABBとAABBの当たり判定
+bool AABBToAABB::isCollision(const AABB& aabb1, const AABB& aabb2) {
+
+	if ((aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
+		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
+		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z)
+		) {
+
+		// 当たっている
+		return true;
+	}
+	// 当たってない
+	return false;
+}
+
+
+// AABBと球の当たり判定
+bool AABBToSphere::isCollision(const AABB& aabb, const Sphere& s) {
+
+	// 最近接点を求める
+	const Vector3 ClosestPoint = {
+		std::clamp(s.center.x, aabb.min.x, aabb.max.x),
+		std::clamp(s.center.y, aabb.min.y, aabb.max.y),
+		std::clamp(s.center.z, aabb.min.z, aabb.max.z), };
+
+	// 最近接点と球の中心と距離を求める
+	float dist = Length(vector::Subtract(ClosestPoint, s.center));
+
+	// 距離が半径よりも小さければ衝突
+	if (dist <= s.radius) {
+
+		// 当たってる
+		return true;
+	}
+	else {
 		// 当たってない
 		return false;
 	}
 }
 
 
-// AABBと球の当たり判定
-namespace AABBToSphere {
+// AABBと線の当たり判定
+bool AABBToSegment::isCollision(const AABB& aabb, const Segment& s) {
 
-	bool onCollision(const AABB& aabb1, const Sphere& s1) {
+	Vector3 tVal = {
+		.x = {}
+	};
 
-		// 最近接点を求める
-		const Vector3 ClosestPoint = {
-			std::clamp(s1.center.x, aabb1.min.x, aabb1.max.x),
-			std::clamp(s1.center.y, aabb1.min.y, aabb1.max.y),
-			std::clamp(s1.center.z, aabb1.min.z, aabb1.max.z), };
 
-		// 最近接点と球の中心と距離を求める
-		float dist = Length(vector::Subtract(ClosestPoint, s1.center));
+	Vector3 tNear = {
+		.x = { (aabb.min.x - s.origin.x) / s.diff.x },
+		.y = { (aabb.min.y - s.origin.y) / s.diff.y },
+		.z = { (aabb.min.z - s.origin.z) / s.diff.z },
+	};
+	Vector3 tFar = {
+		.x = { (aabb.max.x - s.origin.x) / s.diff.x },
+		.y = { (aabb.max.y - s.origin.y) / s.diff.y },
+		.z = { (aabb.max.z - s.origin.z) / s.diff.z },
+	};
 
-		// 距離が半径よりも小さければ衝突
-		if (dist <= s1.radius) {
+	// AABBとの衝突点(貫通点)のtが小さいほう
+	float tmin = max(max(tNear.x, tNear.y), tNear.z);
+	// AABBとの衝突点(貫通点)のtが大きいほう
+	float tmax = min(min(tFar.x, tFar.y), tFar.z);
 
-			// 当たってる
-			return true;
-		}
-		else {
-			// 当たってない
-			return false;
-		}
+	if (tmin < tmax) {
+
+		// 当たってる
+		return true;
+	}
+	else {
+
+		// 当たってない
+		return false;
 	}
 }
+
+
+// OBBと球の当たり判定
+bool OBBToSphere::isCollision(const OBB& obb, const Sphere& s) {
+
+	Vector3 centerInOBBLocalSpace = {
+		Transform(s.center, Inverse(Obb::CreateWorldMatrix(obb))) };
+
+	AABB abbOBBLocal = {
+		.min = { -obb.size.x, -obb.size.y, -obb.size.z },
+		.max = { obb.size.x, obb.size.y, obb.size.z }
+	};
+	Sphere sphereOBBLocal = {
+		centerInOBBLocalSpace,
+		s.radius 
+	};
+
+	// ローカル座標で衝突判定
+	if (AABBToSphere::isCollision(abbOBBLocal, sphereOBBLocal)) {
+
+		// 当たってる
+		return true;
+	}
+	else {
+
+		// 当たってない
+		return false;
+	}
+}
+
+//
+//// OBBと線の当たり判定
+//bool OBBToSegment::isCollision(const OBB& obb, const Segment& s) {
+//
+//
+//}
+//
+//
+//// OBBとOBBの当たり判定
+//bool OBBToOBB::isCollision(const OBB& obb1, const OBB& obb2) {
+//
+//	
+//
+//}

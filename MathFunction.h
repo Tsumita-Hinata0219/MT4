@@ -10,6 +10,7 @@
 #include <cassert>
 #include "imgui.h"
 #include <algorithm>
+#include <Windows.h>
 
 
 
@@ -112,6 +113,11 @@ Vector3 ClosestPoint(const Vector3 point, const Segment segment);
 // 
 Vector3 Perpendicular(const Vector3& vector);
 
+// OBBのワールドマトリックス作成
+namespace Obb {
+	Matrix4x4 CreateWorldMatrix(const OBB& obb);
+}
+
 // グリッドの描画
 void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);
 
@@ -153,35 +159,59 @@ void DrawOBB(
 // 球と球の当たり判定
 namespace SphereToShere {
 
-	bool onCollision(const Sphere& s1, const Sphere& s2);
+	bool isCollision(const Sphere& s1, const Sphere& s2);
 }
 
 // 球と面の当たり判定
 namespace SphereToPlane {
 
-	bool onCollision(const Sphere& s1, const Plane& p1);
+	bool isCollision(const Sphere& s, const Plane& p);
 }
 
 // 線と平面の衝突判定
 namespace LineToPlane {
 
-	bool onCollision(const Segment& s1, const Plane& p1);
+	bool isCollision(const Segment& s, const Plane& p);
 }
 
 // 三角形と線の当たり判定
 namespace TriangleToLine {
 
-	bool onCollision(const Triangle& t1, const Segment& s1);
+	bool isCollision(const Triangle& t, const Segment& s);
 }
 
 // AABBとAABBの当たり判定
 namespace AABBToAABB {
 
-	bool onCollision(const AABB& aabb1, const AABB& aabb2);
+	bool isCollision(const AABB& aabb1, const AABB& aabb2);
 }
 
 // AABBと球の当たり判定
 namespace AABBToSphere {
 
-	bool onCollision(const AABB& aabb1, const Sphere& s1);
+	bool isCollision(const AABB& aabb, const Sphere& s);
+}
+
+// AABBと線の当たり判定
+namespace AABBToSegment {
+
+	bool isCollision(const AABB& aabb, const Segment& s);
+}
+
+// OBBと球の当たり判定
+namespace OBBToSphere {
+
+	bool isCollision(const OBB& obb, const Sphere& s);
+}
+
+// OBBと線の当たり判定
+namespace OBBToSegment {
+
+	bool isCollision(const OBB& obb, const Segment& s);
+}
+
+// OBBとOBBの当たり判定
+namespace OBBToOBB {
+
+	bool isCollision(const OBB& obb1, const OBB& obb2);
 }
