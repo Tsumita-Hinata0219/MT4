@@ -1305,41 +1305,11 @@ bool AABBToSphere::isCollision(const AABB& aabb, const Sphere& s) {
 }
 
 
-// AABBと線の当たり判定
-bool AABBToSegment::isCollision(const AABB& aabb, const Segment& s) {
-
-	Vector3 tVal = {
-		.x = {}
-	};
-
-
-	Vector3 tNear = {
-		.x = { (aabb.min.x - s.origin.x) / s.diff.x },
-		.y = { (aabb.min.y - s.origin.y) / s.diff.y },
-		.z = { (aabb.min.z - s.origin.z) / s.diff.z },
-	};
-	Vector3 tFar = {
-		.x = { (aabb.max.x - s.origin.x) / s.diff.x },
-		.y = { (aabb.max.y - s.origin.y) / s.diff.y },
-		.z = { (aabb.max.z - s.origin.z) / s.diff.z },
-	};
-
-	// AABBとの衝突点(貫通点)のtが小さいほう
-	float tmin = max(max(tNear.x, tNear.y), tNear.z);
-	// AABBとの衝突点(貫通点)のtが大きいほう
-	float tmax = min(min(tFar.x, tFar.y), tFar.z);
-
-	if (tmin < tmax) {
-
-		// 当たってる
-		return true;
-	}
-	else {
-
-		// 当たってない
-		return false;
-	}
-}
+//// AABBと線の当たり判定
+//bool AABBToSegment::isCollision(const AABB& aabb, const Segment& s) {
+//
+//	
+//}
 
 
 // OBBと球の当たり判定
