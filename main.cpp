@@ -27,17 +27,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	Quaternion qA = { 2.0f, 3.0f, 4.0f, 1.0f };
-	Quaternion qB = { 1.0f, 3.0f, 5.0f, 2.0f };
+	Quaternion rotation = MakeRotateAxisAngleQuatenion(
+		Normalize(Vector3{ 1.0f, 0.4f, -0.2f }), 0.45f);
 
-	Quaternion identity = quaternion::Identity();
-	Quaternion conj = quaternion::Conjugate(qA);
-	Quaternion inv = quaternion::Inverse(qA);
-	Quaternion normal = quaternion::Normalize(qA);
-	Quaternion mulA = quaternion::Multiply(qA, qB);
-	Quaternion mulB = quaternion::Multiply(qB, qA);
-	float norm = quaternion::Norm(qA);
-
+	Vector3 pointY = { 2.1f, -0.9f, 1.3f };
+	Matrix4x4 rotateMat = MakeRotateMatrix(rotation);
+	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
+	Vector3 rotateByMat = TransformByMatrix(pointY, rotateMat);
 
 	
 	// ウィンドウの×ボタンが押されるまでループ
@@ -53,16 +49,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		ImGui::Begin("Quaternion");
-		ImGui::DragFloat4("Identity", &identity.x);
-		ImGui::DragFloat4("Conjugate", &conj.x);
-		ImGui::DragFloat4("Inverse", &inv.x);
-		ImGui::DragFloat4("Normalize", &normal.x);
-		ImGui::DragFloat4("Multiply(q1, q2)", &mulA.x);
-		ImGui::DragFloat4("Multiply(q2, q1)", &mulB.x);
-		ImGui::DragFloat("norm", &norm);
+		ImGui::Begin("01_04");
+		ImGui::DragFloat4("Rotation", &rotation.x);
+		ImGui::Text("RotateMat");
+		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[0][0], rotateMat.m[0][1], rotateMat.m[0][2], rotateMat.m[0][3]);
+		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[1][0], rotateMat.m[1][1], rotateMat.m[1][2], rotateMat.m[1][3]);
+		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[2][0], rotateMat.m[2][1], rotateMat.m[2][2], rotateMat.m[2][3]);
+		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[3][0], rotateMat.m[3][1], rotateMat.m[3][2], rotateMat.m[3][3]);
+		ImGui::DragFloat3("rotateByQuaternioon", &rotateByQuaternion.x);
+		ImGui::DragFloat3("rotateByMat", &rotateByMat.x);
 		ImGui::End();
-
+	
 		///
 		/// ↑更新処理ここまで
 		///

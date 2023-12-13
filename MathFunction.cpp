@@ -639,7 +639,7 @@ Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
 	}
 
 
-	Matrix4x4 result = MakeRotateAxisAngle(n , sin, cos);
+	Matrix4x4 result = MakeRotateAxisAngle(n, sin, cos);
 
 
 	return result;
@@ -701,9 +701,9 @@ namespace quaternion {
 		float result = 0.0f;
 
 		result = sqrt(float(
-			pow(quaternion.w, 2) + 
-			pow(quaternion.x, 2) + 
-			pow(quaternion.y, 2) + 
+			pow(quaternion.w, 2) +
+			pow(quaternion.x, 2) +
+			pow(quaternion.y, 2) +
 			pow(quaternion.z, 2)));
 
 
@@ -751,6 +751,82 @@ namespace quaternion {
 
 		return result;
 	}
+}
+
+
+// 任意軸回転を表すQuaternionの生成
+Quaternion	MakeRotateAxisAngleQuatenion(const Vector3& axis, float angle) {
+
+	float halfAngle = angle * 0.5f;
+	float sinHalfAngle = sinf(halfAngle);
+	float cosHalfAngle = cosf(halfAngle);
+
+	Quaternion result{};
+
+	result = {
+		result.x = axis.x * sinHalfAngle,
+		result.y = axis.y * sinHalfAngle,
+		result.z = axis.z * sinHalfAngle,
+		result.w = cosHalfAngle,
+	};
+
+
+	return result;
+}
+
+
+// ベクトルをQuaternionで回転させた結果のベクトルを求める
+Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion) {
+
+	Quaternion vecQ = {
+		.x = vector.x,
+		.y = vector.y,
+		.z = vector.z,
+		.w = 0.0f,
+	};
+
+	Quaternion conjugate = quaternion::Conjugate(quaternion);
+
+	Quaternion rotateVec = quaternion::Multiply(quaternion, (quaternion::Multiply(vecQ, conjugate)));
+
+	Vector3 result = {
+		.x = rotateVec.x,
+		.y = rotateVec.y,
+		.z = rotateVec.z,
+	};
+
+	return result;
+}
+
+
+// Quaternionから回転行列を求める
+Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion) {
+
+	Quaternion powQ = {
+		.x = float(pow(quaternion.x, 2)),
+		.y = float(pow(quaternion.y, 2)),
+		.z = float(pow(quaternion.z, 2)),
+		.w = float(pow(quaternion.w, 2)),
+	};
+
+	Matrix4x4 result{};
+
+	result = MakeIdentity4x4();
+
+	result.m[0][0] = powQ.w + powQ.x - powQ.y - powQ.z;
+	result.m[0][1] = 2 * ((quaternion.x * quaternion.y) + (quaternion.w * quaternion.z));
+	result.m[0][2] = 2 * ((quaternion.x * quaternion.z) - (quaternion.w * quaternion.y));
+
+	result.m[1][0] = 2 * ((quaternion.x * quaternion.y) - (quaternion.w * quaternion.z));
+	result.m[1][1] = powQ.w - powQ.x + powQ.y - powQ.z;
+	result.m[1][2] = 2 * ((quaternion.y * quaternion.z) + (quaternion.w * quaternion.x));
+
+	result.m[2][0] = 2 * ((quaternion.x * quaternion.z) + (quaternion.w * quaternion.y));
+	result.m[2][1] = 2 * ((quaternion.y * quaternion.z) - (quaternion.w * quaternion.x));
+	result.m[2][2] = powQ.w - powQ.x - powQ.y + powQ.z;
+
+
+	return result;
 }
 
 
