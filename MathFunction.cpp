@@ -574,17 +574,6 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 	result = MakeIdentity4x4();
 
 
-	//result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
-	//result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
-	//result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) + axis.y * sinTheta;
-	//result.m[1][0] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
-	//result.m[1][1] = (axis.y * axis.y) * (1 - cosTheta) + cosTheta;
-	//result.m[1][2] = (axis.y * axis.z) * (1 - cosTheta) - axis.x * sinTheta;
-	//result.m[2][0] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
-	//result.m[2][1] = (axis.y * axis.z) * (1 - cosTheta) + axis.x * sinTheta;
-	//result.m[2][2] = (axis.z * axis.z) * (1 - cosTheta) + cosTheta;
-
-
 	result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
 	result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
 	result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
@@ -600,6 +589,57 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 
 	return result;
 }
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float sin, float cos) {
+
+	Matrix4x4 result{};
+	result = MakeIdentity4x4();
+
+
+	result.m[0][0] = axis.x * axis.x * (1 - cos) + cos;
+	result.m[0][1] = axis.x * axis.y * (1 - cos) - axis.z * sin;
+	result.m[0][2] = axis.x * axis.z * (1 - cos) + axis.y * sin;
+
+	result.m[1][0] = axis.x * axis.y * (1 - cos) + axis.z * sin;
+	result.m[1][1] = axis.y * axis.y * (1 - cos) + cos;
+	result.m[1][2] = axis.y * axis.z * (1 - cos) - axis.x * sin;
+
+	result.m[2][0] = axis.x * axis.z * (1 - cos) - axis.y * sin;
+	result.m[2][1] = axis.y * axis.z * (1 - cos) + axis.x * sin;
+	result.m[2][2] = axis.z * axis.z * (1 - cos) + cos;
+	return result;
+}
+
+
+// ある方向からある方向への回転
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+
+	Vector3 fromVector = Normalize(from);
+	Vector3 toVector = Normalize(to);
+	Vector3 n = Normalize(Cross(fromVector, toVector));
+
+	float cos = Dot(fromVector, toVector);
+	float sin = Length(Cross(fromVector, toVector));
+
+
+	if (from.x == -to.x && from.y == -to.y && from.z == -to.z) {
+
+		if (from.x != 0.0f || from.y != 0.0f) {
+
+			n = { from.y, -from.x, 0.0f };
+		}
+		else if (from.x != 0.0f || from.z != 0.0f) {
+
+			n = { from.z, 0.0f, -from.x };
+		}
+	}
+
+
+	Matrix4x4 result = MakeRotateAxisAngle(n , sin, cos);
+
+
+	return result;
+}
+
 
 
 // 平行移動行列

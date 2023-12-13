@@ -25,37 +25,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate = { 0.26f,0.0f,0.0f };
 
-	Plane plane = { {0.0f,1.0f,0.0f}, 1.0f };
+	Vector3 fromA = Normalize(Vector3{ 1.0f, 0.7f, 0.5f });
+	Vector3 toA = vector::Multiply(-1.0f, fromA);
+	Vector3 fromB = Normalize(Vector3{ -0.6f, 0.9f, 0.2f });
+	Vector3 toB = Normalize(Vector3{ 0.4f, 0.7f, -0.5f });
 
-	Segment segment = { 
-		.origin {-0.8f,0.3f,0.0f},
-		.diff {0.5f,0.5f,0.5f} 
-	};
+	Matrix4x4 rotateMat0 = DirectionToDirection(
+		Normalize(Vector3{ 1.0f, 0.0f, 0.0f }), Normalize(Vector3{ -1.0f, 0.0f, 0.0f })
+	);
+	Matrix4x4 rotateMatA = DirectionToDirection(fromA, toA);
+	Matrix4x4 rotateMatB = DirectionToDirection(fromB, toB);
 
-	AABB aabb = {
-		.min {-0.5f, -0.5f, -0.5f},
-		.max {0.5f, 0.5f, 0.5f},
-	};
-	Vector3 obbrotate1{ 0.0f, 0.0f, 0.0f };
-	OBB obb1 = {
-		.center { 0.0f, 0.0f, 0.0f },
-		.orientations = {
-			{1.0f, 0.0f, 0.0f},
-			{0.0f, 1.0f, 0.0f},
-			{0.0f, 0.0f, 1.0f},},
-		.size {0.83f, 0.26f, 0.24f},
-	};
-	Vector3 obbrotate2{ -0.05f, -2.49f, 0.15f };
-	OBB obb2 = {
-		.center { 0.9f, 0.66f, 0.78f },
-		.orientations = {
-			{1.0f, 0.0f, 0.0f},
-			{0.0f, 1.0f, 0.0f},
-			{0.0f, 0.0f, 1.0f},},
-		.size {0.5f, 0.37f, 0.5f},
-	};
-
-	int Color = WHITE;
 
 	
 	// ウィンドウの×ボタンが押されるまでループ
@@ -71,59 +51,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		//計算
-		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
-		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraTranslate);
-		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(ScreenWidth) / float(ScreenHeight), 0.1f, 100.0f);
-		Matrix4x4 WorldViewProjectionMatrix = matrix::Multiply(worldMatrix, matrix::Multiply(viewMatrix, projectionMatrix));
-		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(ScreenWidth), float(ScreenHeight), 0.0f, 1.0f);
-
-
-		Matrix4x4 rotateMat1 = MakeRotateXYZMatrix(obbrotate1.x, obbrotate1.y, obbrotate1.z);
-		obb1.orientations[0].x = rotateMat1.m[0][0];
-		obb1.orientations[0].y = rotateMat1.m[0][1];
-		obb1.orientations[0].z = rotateMat1.m[0][2];
-		obb1.orientations[1].x = rotateMat1.m[1][0];
-		obb1.orientations[1].y = rotateMat1.m[1][1];
-		obb1.orientations[1].z = rotateMat1.m[1][2];
-		obb1.orientations[2].x = rotateMat1.m[2][0];
-		obb1.orientations[2].y = rotateMat1.m[2][1];
-		obb1.orientations[2].z = rotateMat1.m[2][2];
-
-		Matrix4x4 rotateMat2 = MakeRotateXYZMatrix(obbrotate2.x, obbrotate2.y, obbrotate2.z);
-		obb2.orientations[0].x = rotateMat2.m[0][0];
-		obb2.orientations[0].y = rotateMat2.m[0][1];
-		obb2.orientations[0].z = rotateMat2.m[0][2];
-		obb2.orientations[1].x = rotateMat2.m[1][0];
-		obb2.orientations[1].y = rotateMat2.m[1][1];
-		obb2.orientations[1].z = rotateMat2.m[1][2];
-		obb2.orientations[2].x = rotateMat2.m[2][0];
-		obb2.orientations[2].y = rotateMat2.m[2][1];
-		obb2.orientations[2].z = rotateMat2.m[2][2];
-
-		ImGui::Begin("window");
-		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		//PlaneのImGui
-		ImGui::Text("OBB1");
-		ImGui::DragFloat3("OBB1.center", &obb1.center.x, 0.01f);
-		ImGui::DragFloat3("OBB1.rotate", &obbrotate1.x, 0.01f);
-		ImGui::DragFloat3("OBB1.size", &obb1.size.x, 0.01f);
-		ImGui::Text("OBB2");
-		ImGui::DragFloat3("OBB2.center", &obb2.center.x, 0.01f);
-		ImGui::DragFloat3("OBB2.rotate", &obbrotate2.x, 0.01f);
-		ImGui::DragFloat3("OBB2.size", &obb2.size.x, 0.01f);
-		Vector3 start = TransformByMatrix(TransformByMatrix(segment.origin, WorldViewProjectionMatrix), viewportMatrix);
-		Vector3 end = TransformByMatrix(TransformByMatrix(vector::Add(segment.origin, segment.diff), WorldViewProjectionMatrix), viewportMatrix);
-		if (OBBToOBB::isCollision(obb1, obb2) == true) {
-			Color = RED;
-		}
-		else {
-			Color = WHITE;
-		}
+		ImGui::Begin("rotateMat0");
+		ImGui::DragFloat4("[0]", &rotateMat0.m[0][0]);
+		ImGui::DragFloat4("[1]", &rotateMat0.m[1][0]);
+		ImGui::DragFloat4("[2]", &rotateMat0.m[2][0]);
+		ImGui::DragFloat4("[3]", &rotateMat0.m[3][0]);
 		ImGui::End();
-		plane.normal = Normalize(plane.normal);
+		ImGui::Begin("rotateMat1");
+		ImGui::DragFloat4("[0]", &rotateMatA.m[0][0]);
+		ImGui::DragFloat4("[1]", &rotateMatA.m[1][0]);
+		ImGui::DragFloat4("[2]", &rotateMatA.m[2][0]);
+		ImGui::DragFloat4("[3]", &rotateMatA.m[3][0]);
+		ImGui::End();
+		ImGui::Begin("rotateMat2");
+		ImGui::DragFloat4("[0]", &rotateMatB.m[0][0]);
+		ImGui::DragFloat4("[1]", &rotateMatB.m[1][0]);
+		ImGui::DragFloat4("[2]", &rotateMatB.m[2][0]);
+		ImGui::DragFloat4("[3]", &rotateMatB.m[3][0]);
+		ImGui::End();
+
 
 		///
 		/// ↑更新処理ここまで
@@ -133,13 +79,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		DrawGrid(viewMatrix, projectionMatrix, viewportMatrix);
-		//Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), Color);
-		DrawOBB(obb1, WorldViewProjectionMatrix, viewportMatrix, WHITE);
-		DrawOBB(obb2, WorldViewProjectionMatrix, viewportMatrix, Color);
-		//DrawPlane(plane, WorldViewProjectionMatrix, viewportMatrix, WHITE);
-		//DrawAABB(aabb, WorldViewProjectionMatrix, viewportMatrix, WHITE);
-
+		MatrixScreenPrintf(10, 0, rotateMat0, "rotateMat0");
+		MatrixScreenPrintf(10, 120, rotateMatA, "rotateMat1");
+		MatrixScreenPrintf(10, 240, rotateMatB, "rotateMat2");
 
 		///
 		/// ↑描画処理ここまで
