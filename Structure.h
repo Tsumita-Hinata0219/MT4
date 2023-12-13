@@ -56,6 +56,7 @@ struct AABB {
 };
 
 
+// OBB
 struct OBB {
 	Vector3 center;			   // !< 中心点
 	Vector3 orientations[3]{}; // !< 座標軸。正規化・直交必須

@@ -409,7 +409,7 @@ Matrix4x4 MakeIdentity4x4() {
 
 
 // 座標変換
-Vector3 Transform(const Vector3 vector, const Matrix4x4 matrix)
+Vector3 TransformByMatrix(const Vector3 vector, const Matrix4x4 matrix)
 {
 	Vector3 result{};
 
@@ -572,7 +572,7 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 
 	Matrix4x4 result{};
 	result = MakeIdentity4x4();
-	
+
 
 	//result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
 	//result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
@@ -790,27 +790,79 @@ Vector3 Perpendicular(const Vector3& vector)
 
 
 // OBBのワールドマトリックス作成
-namespace Obb {
+Matrix4x4 CreateOBBWorldMatrix(const OBB& obb) {
 
-	Matrix4x4 CreateWorldMatrix(const OBB& obb) {
+	Matrix4x4 worldMatrix{};
 
-		Matrix4x4 worldMatrix{};
-
-		for (int i = 0; i < 3; ++i) {
-			worldMatrix.m[i][0] = obb.orientations[i].x;
-			worldMatrix.m[i][1] = obb.orientations[i].y;
-			worldMatrix.m[i][2] = obb.orientations[i].z;
-			worldMatrix.m[i][3] = 0.0f;
-		}
-
-		worldMatrix.m[3][0] = obb.center.x;
-		worldMatrix.m[3][1] = obb.center.y;
-		worldMatrix.m[3][2] = obb.center.z;
-		worldMatrix.m[3][3] = 1.0f;
-
-
-		return worldMatrix;
+	for (int i = 0; i < 3; ++i) {
+		worldMatrix.m[i][0] = obb.orientations[i].x;
+		worldMatrix.m[i][1] = obb.orientations[i].y;
+		worldMatrix.m[i][2] = obb.orientations[i].z;
+		worldMatrix.m[i][3] = 0.0f;
 	}
+
+	worldMatrix.m[3][0] = obb.center.x;
+	worldMatrix.m[3][1] = obb.center.y;
+	worldMatrix.m[3][2] = obb.center.z;
+	worldMatrix.m[3][3] = 1.0f;
+
+
+	return worldMatrix;
+}
+
+
+// 射影の重複チェック
+bool TestAxis(const Vector3& axis, const OBB& obb1, const OBB& obb2) {
+
+	// OBBの射影を計算
+	auto projection1 = obbProjection(obb1, axis);
+	auto projection2 = obbProjection(obb2, axis);
+
+	// 射影が重なっているかチェック
+	return projectionOverlap(projection1, projection2);
+}
+
+
+// 頂点を軸に射影
+std::pair<float, float> obbProjection(const OBB& obb, const Vector3& axis) {
+
+	float val = std::sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z); // 正規化
+	float newAxis = 0.0f;
+	newAxis = newAxis / val;
+
+	// OBB上の頂点を取得
+	std::array<Vector3, 8> vertices{};
+	for (int i = 0; i < 8; ++i) {
+		Vector3 sign = { (i & 1) ? 1.0f : -1.0f, (i & 2) ? 1.0f : -1.0f, (i & 4) ? 1.0f : -1.0f };
+		vertices[i] = {
+			obb.center.x + obb.orientations[0].x * sign.x * obb.size.x +
+						  obb.orientations[1].x * sign.y * obb.size.y +
+						  obb.orientations[2].x * sign.z * obb.size.z,
+			obb.center.y + obb.orientations[0].y * sign.x * obb.size.x +
+						  obb.orientations[1].y * sign.y * obb.size.y +
+						  obb.orientations[2].y * sign.z * obb.size.z,
+			obb.center.z + obb.orientations[0].z * sign.x * obb.size.x +
+						  obb.orientations[1].z * sign.y * obb.size.y +
+						  obb.orientations[2].z * sign.z * obb.size.z
+		};
+	}
+
+	// 頂点を軸に射影
+	std::array<float, 8> projections{};
+	for (int i = 0; i < 8; ++i) {
+		projections[i] = vertices[i].x * axis.x + vertices[i].y * axis.y + vertices[i].z * axis.z;
+	}
+
+	auto minmax = std::minmax_element(projections.begin(), projections.end());
+	return std::make_pair(*minmax.first, *minmax.second);
+}
+
+
+// 実際に重なってるかの計算
+bool projectionOverlap(const std::pair<float, float>& projection1, const std::pair<float, float>& projection2) {
+
+	// 射影が重なっているかチェック
+	return projection1.second >= projection2.first && projection2.second >= projection1.first;
 }
 
 
@@ -868,11 +920,11 @@ void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix
 		Matrix4x4 worldViewProjectionMatrixEnd = matrix::Multiply(WorldMatrixEndColumn[xIndex], matrix::Multiply(viewMatrix, viewProjectionMatrix));
 
 
-		ndcVerticesStartColumn = Transform(LocalVerticesStartColumn[xIndex], worldViewProjectionMatrixStart);
-		ndcVerticesEndColumn = Transform(LocalVerticesEndColumn[xIndex], worldViewProjectionMatrixEnd);
+		ndcVerticesStartColumn = TransformByMatrix(LocalVerticesStartColumn[xIndex], worldViewProjectionMatrixStart);
+		ndcVerticesEndColumn = TransformByMatrix(LocalVerticesEndColumn[xIndex], worldViewProjectionMatrixEnd);
 
-		screenVerticesStartColumn[xIndex] = Transform(ndcVerticesStartColumn, viewportMatrix);
-		screenVerticesEndColumn[xIndex] = Transform(ndcVerticesEndColumn, viewportMatrix);
+		screenVerticesStartColumn[xIndex] = TransformByMatrix(ndcVerticesStartColumn, viewportMatrix);
+		screenVerticesEndColumn[xIndex] = TransformByMatrix(ndcVerticesEndColumn, viewportMatrix);
 
 
 		Novice::DrawLine(
@@ -880,7 +932,7 @@ void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix
 			int(screenVerticesStartColumn[xIndex].y),
 			int(screenVerticesEndColumn[xIndex].x),
 			int(screenVerticesEndColumn[xIndex].y),
-			RED);
+			BLACK);
 
 		Novice::DrawLine(
 			int(screenVerticesStartColumn[0].x),
@@ -909,11 +961,11 @@ void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix
 		Matrix4x4 worldViewProjectionMatrixEndLine = matrix::Multiply(WorldMatrixEndLine[zIndex], matrix::Multiply(viewMatrix, viewProjectionMatrix));
 
 
-		ndcVerticesStartLine = Transform(LocalVerticesStartLine[zIndex], worldViewProjectionMatrixStartLine);
-		ndcVerticesEndLine = Transform(LocalVerticesEndLine[zIndex], worldViewProjectionMatrixEndLine);
+		ndcVerticesStartLine = TransformByMatrix(LocalVerticesStartLine[zIndex], worldViewProjectionMatrixStartLine);
+		ndcVerticesEndLine = TransformByMatrix(LocalVerticesEndLine[zIndex], worldViewProjectionMatrixEndLine);
 
-		screenVerticesStartLine[zIndex] = Transform(ndcVerticesStartLine, viewportMatrix);
-		screenVerticesEndLine[zIndex] = Transform(ndcVerticesEndLine, viewportMatrix);
+		screenVerticesStartLine[zIndex] = TransformByMatrix(ndcVerticesStartLine, viewportMatrix);
+		screenVerticesEndLine[zIndex] = TransformByMatrix(ndcVerticesEndLine, viewportMatrix);
 
 
 		Novice::DrawLine(
@@ -921,7 +973,7 @@ void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix
 			int(screenVerticesStartLine[zIndex].y),
 			int(screenVerticesEndLine[zIndex].x),
 			int(screenVerticesEndLine[zIndex].y),
-			RED);
+			BLACK);
 
 		Novice::DrawLine(
 			int(screenVerticesStartLine[0].x),
@@ -967,12 +1019,12 @@ void DrawSphere(
 				sphere.radius * std::cosf(lat) * std::sinf(lon + lonEvery) };
 			c = vector::Add(c, sphere.center);
 
-			a = Transform(a, viewProjectionMatrix);
-			a = Transform(a, viewportMatrix);
-			b = Transform(b, viewProjectionMatrix);
-			b = Transform(b, viewportMatrix);
-			c = Transform(c, viewProjectionMatrix);
-			c = Transform(c, viewportMatrix);
+			a = TransformByMatrix(a, viewProjectionMatrix);
+			a = TransformByMatrix(a, viewportMatrix);
+			b = TransformByMatrix(b, viewProjectionMatrix);
+			b = TransformByMatrix(b, viewportMatrix);
+			c = TransformByMatrix(c, viewProjectionMatrix);
+			c = TransformByMatrix(c, viewportMatrix);
 
 
 			Novice::DrawLine(
@@ -1012,7 +1064,7 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 			perpendiculars[index].y * 2.0f,
 			perpendiculars[index].z * 2.0f, };
 		Vector3 point = vector::Add(center, extend);
-		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+		points[index] = TransformByMatrix(TransformByMatrix(point, viewProjectionMatrix), viewportMatrix);
 	}
 
 	Novice::DrawLine((int)points[0].x, (int)points[0].y, (int)points[2].x, (int)points[2].y, color);
@@ -1032,7 +1084,7 @@ void DrawTriAngle(
 	Vector3 verticle[3]{};
 
 	for (int i = 0; i < 3; i++) {
-		verticle[i] = Transform(Transform(triangle.vertices[i], viewProjectionMatrix), viewportMatrix);
+		verticle[i] = TransformByMatrix(TransformByMatrix(triangle.vertices[i], viewProjectionMatrix), viewportMatrix);
 	}
 
 	Novice::DrawTriangle(
@@ -1062,8 +1114,8 @@ void DrawAABB(
 
 	Vector3 screenVerticles[8]{};
 	for (int i = 0; i < 8; i++) {
-		verticles[i] = Transform(verticles[i], viewProjection);
-		screenVerticles[i] = Transform(verticles[i], viewport);
+		verticles[i] = TransformByMatrix(verticles[i], viewProjection);
+		screenVerticles[i] = TransformByMatrix(verticles[i], viewport);
 	}
 
 	Novice::DrawLine(int(screenVerticles[0].x), int(screenVerticles[0].y), int(screenVerticles[1].x), int(screenVerticles[1].y), color);
@@ -1120,8 +1172,8 @@ void DrawOBB(
 
 	Vector3 screenVerticles[8]{};
 	for (int i = 0; i < 8; i++) {
-		verticles[i] = Transform(verticles[i], viewProjection);
-		screenVerticles[i] = Transform(verticles[i], viewport);
+		verticles[i] = TransformByMatrix(verticles[i], viewProjection);
+		screenVerticles[i] = TransformByMatrix(verticles[i], viewport);
 	}
 
 
@@ -1319,28 +1371,47 @@ bool AABBToSphere::isCollision(const AABB& aabb, const Sphere& s) {
 // AABBと線の当たり判定
 bool AABBToSegment::isCollision(const AABB& aabb, const Segment& s) {
 
-	Vector3 tVal = {
-		.x = {}
+	Vector3 tMin = {
+		.x = (aabb.min.x - s.origin.x) / s.diff.x,
+		.y = (aabb.min.y - s.origin.y) / s.diff.y,
+		.z = (aabb.min.z - s.origin.z) / s.diff.z,
 	};
+	Vector3 tMax = {
+		.x = (aabb.max.x - s.origin.x) / s.diff.x,
+		.y = (aabb.max.y - s.origin.y) / s.diff.y,
+		.z = (aabb.max.z - s.origin.z) / s.diff.z,
+	};
+
+
+	if (std::isnan(tMin.x) || std::isnan(tMax.x) ||
+		std::isnan(tMin.y) || std::isnan(tMax.y) ||
+		std::isnan(tMin.z) || std::isnan(tMax.z)) {
+		return true;
+	}
 
 
 	Vector3 tNear = {
-		.x = { (aabb.min.x - s.origin.x) / s.diff.x },
-		.y = { (aabb.min.y - s.origin.y) / s.diff.y },
-		.z = { (aabb.min.z - s.origin.z) / s.diff.z },
+		.x = min(tMin.x, tMax.x),
+		.y = min(tMin.y, tMax.y),
+		.z = min(tMin.z, tMax.z),
 	};
 	Vector3 tFar = {
-		.x = { (aabb.max.x - s.origin.x) / s.diff.x },
-		.y = { (aabb.max.y - s.origin.y) / s.diff.y },
-		.z = { (aabb.max.z - s.origin.z) / s.diff.z },
+		.x = max(tMin.x, tMax.x),
+		.y = max(tMin.y, tMax.y),
+		.z = max(tMin.z, tMax.z),
 	};
 
 	// AABBとの衝突点(貫通点)のtが小さいほう
-	float tmin = max(max(tNear.x, tNear.y), tNear.z);
+	float ntMin = max(max(tNear.x, tNear.y), tNear.z);
 	// AABBとの衝突点(貫通点)のtが大きいほう
-	float tmax = min(min(tFar.x, tFar.y), tFar.z);
+	float ntMax = min(min(tFar.x, tFar.y), tFar.z);
 
-	if (tmin < tmax) {
+
+	if (ntMin < 0.0f && ntMax < 0.0f || ntMin > 1.0f && ntMax > 1.0f) {
+		return false;
+	}
+
+	if (ntMin < ntMax) {
 
 		// 当たってる
 		return true;
@@ -1357,7 +1428,7 @@ bool AABBToSegment::isCollision(const AABB& aabb, const Segment& s) {
 bool OBBToSphere::isCollision(const OBB& obb, const Sphere& s) {
 
 	Vector3 centerInOBBLocalSpace = {
-		Transform(s.center, Inverse(Obb::CreateWorldMatrix(obb))) };
+		TransformByMatrix(s.center, Inverse(CreateOBBWorldMatrix(obb))) };
 
 	AABB abbOBBLocal = {
 		.min = { -obb.size.x, -obb.size.y, -obb.size.z },
@@ -1365,7 +1436,7 @@ bool OBBToSphere::isCollision(const OBB& obb, const Sphere& s) {
 	};
 	Sphere sphereOBBLocal = {
 		centerInOBBLocalSpace,
-		s.radius 
+		s.radius
 	};
 
 	// ローカル座標で衝突判定
@@ -1381,17 +1452,72 @@ bool OBBToSphere::isCollision(const OBB& obb, const Sphere& s) {
 	}
 }
 
-//
-//// OBBと線の当たり判定
-//bool OBBToSegment::isCollision(const OBB& obb, const Segment& s) {
-//
-//
-//}
-//
-//
-//// OBBとOBBの当たり判定
-//bool OBBToOBB::isCollision(const OBB& obb1, const OBB& obb2) {
-//
-//	
-//
-//}
+
+// OBBと線の当たり判定
+bool OBBToSegment::isCollision(const OBB& obb, const Segment& s) {
+
+	Matrix4x4 obbInverse = Inverse(CreateOBBWorldMatrix(obb));
+
+	AABB aabbOBBLocal = {
+		.min = { -obb.size.x, -obb.size.y, -obb.size.z },
+		.max = { obb.size.x, obb.size.y, obb.size.z }
+	};
+
+
+	Vector3 localOrigin = TransformByMatrix(s.origin, obbInverse);
+	Vector3 LocalEnd = TransformByMatrix(vector::Add(s.origin, s.diff), obbInverse);
+
+	Segment localSegment = {
+		.origin = localOrigin,
+		.diff = vector::Subtract(LocalEnd, localOrigin),
+	};
+
+
+	// AABBとSegmentの当たり判定を使う
+	if (AABBToSegment::isCollision(aabbOBBLocal, localSegment)) {
+
+		// 当たってる
+		return true;
+	}
+	else {
+
+		// 当たってない
+		return false;
+	}
+}
+
+
+// OBBとOBBの当たり判定
+bool OBBToOBB::isCollision(const OBB& obb1, const OBB& obb2) {
+
+	// 分離軸テスト
+	for (const auto& axis : obb1.orientations) {
+		if (!TestAxis(axis, obb1, obb2)) {
+			return false;
+		}
+	}
+
+	for (const auto& axis : obb2.orientations) {
+		if (!TestAxis(axis, obb1, obb2)) {
+			return false;
+		}
+	}
+
+	// OBB1の軸とOBB2の軸に垂直な軸をテスト
+	for (const auto& axis : {
+			Vector3{obb1.orientations[1].x * obb2.orientations[2].x - obb1.orientations[2].x * obb2.orientations[1].x,
+					obb1.orientations[1].y * obb2.orientations[2].y - obb1.orientations[2].y * obb2.orientations[1].y,
+					obb1.orientations[1].z * obb2.orientations[2].z - obb1.orientations[2].z * obb2.orientations[1].z},
+			Vector3{obb1.orientations[2].x * obb2.orientations[0].x - obb1.orientations[0].x * obb2.orientations[2].x,
+					obb1.orientations[2].y * obb2.orientations[0].y - obb1.orientations[0].y * obb2.orientations[2].y,
+					obb1.orientations[2].z * obb2.orientations[0].z - obb1.orientations[0].z * obb2.orientations[2].z},
+			Vector3{obb1.orientations[0].x * obb2.orientations[1].x - obb1.orientations[1].x * obb2.orientations[0].x,
+					obb1.orientations[0].y * obb2.orientations[1].y - obb1.orientations[1].y * obb2.orientations[0].y,
+					obb1.orientations[0].z * obb2.orientations[1].z - obb1.orientations[1].z * obb2.orientations[0].z} }) {
+		if (!TestAxis(axis, obb1, obb2)) {
+			return false;
+		}
+	}
+
+	return true;
+}

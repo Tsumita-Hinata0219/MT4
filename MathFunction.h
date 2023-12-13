@@ -11,6 +11,7 @@
 #include "imgui.h"
 #include <algorithm>
 #include <Windows.h>
+#include <array>
 
 
 
@@ -71,7 +72,7 @@ Matrix4x4 MakeIdentity4x4();
 Matrix4x4 MakeTranslateMatrix(const Vector3 translate);
 
 // 座標変換
-Vector3 Transform(const Vector3 vector, const Matrix4x4 matrix);
+Vector3 TransformByMatrix(const Vector3 vector, const Matrix4x4 matrix);
 
 // 拡大縮小行列
 Matrix4x4 MakeScaleMatrix(const Vector3 scele);
@@ -117,9 +118,16 @@ Vector3 ClosestPoint(const Vector3 point, const Segment segment);
 Vector3 Perpendicular(const Vector3& vector);
 
 // OBBのワールドマトリックス作成
-namespace Obb {
-	Matrix4x4 CreateWorldMatrix(const OBB& obb);
-}
+Matrix4x4 CreateOBBWorldMatrix(const OBB& obb);
+
+// 射影の重複チェック
+bool TestAxis(const Vector3& axis, const OBB& obb1, const OBB& obb2);
+
+// 実際に重なってるかの計算
+bool projectionOverlap(const std::pair<float, float>& projection1, const std::pair<float, float>& projection2);
+
+// 頂点を軸に射影
+std::pair<float, float> obbProjection(const OBB& obb, const Vector3& axis);
 
 // グリッドの描画
 void DrawGrid(const Matrix4x4& viewMatrix, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);
