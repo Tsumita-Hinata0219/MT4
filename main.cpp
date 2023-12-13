@@ -52,22 +52,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		
 		ImGui::Begin("rotateMat0");
-		ImGui::DragFloat4("[0]", &rotateMat0.m[0][0]);
-		ImGui::DragFloat4("[1]", &rotateMat0.m[1][0]);
-		ImGui::DragFloat4("[2]", &rotateMat0.m[2][0]);
-		ImGui::DragFloat4("[3]", &rotateMat0.m[3][0]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][0], rotateMat0.m[1][0], rotateMat0.m[2][0], rotateMat0.m[3][0]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][1], rotateMat0.m[1][1], rotateMat0.m[2][1], rotateMat0.m[3][1]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][2], rotateMat0.m[1][2], rotateMat0.m[2][2], rotateMat0.m[3][2]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][3], rotateMat0.m[1][3], rotateMat0.m[2][3], rotateMat0.m[3][3]);
 		ImGui::End();
 		ImGui::Begin("rotateMat1");
-		ImGui::DragFloat4("[0]", &rotateMatA.m[0][0]);
-		ImGui::DragFloat4("[1]", &rotateMatA.m[1][0]);
-		ImGui::DragFloat4("[2]", &rotateMatA.m[2][0]);
-		ImGui::DragFloat4("[3]", &rotateMatA.m[3][0]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][0], rotateMatA.m[1][0], rotateMatA.m[2][0], rotateMatA.m[3][0]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][1], rotateMatA.m[1][1], rotateMatA.m[2][1], rotateMatA.m[3][1]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][2], rotateMatA.m[1][2], rotateMatA.m[2][2], rotateMatA.m[3][2]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][3], rotateMatA.m[1][3], rotateMatA.m[2][3], rotateMatA.m[3][3]);
+
 		ImGui::End();
 		ImGui::Begin("rotateMat2");
-		ImGui::DragFloat4("[0]", &rotateMatB.m[0][0]);
-		ImGui::DragFloat4("[1]", &rotateMatB.m[1][0]);
-		ImGui::DragFloat4("[2]", &rotateMatB.m[2][0]);
-		ImGui::DragFloat4("[3]", &rotateMatB.m[3][0]);
+		ImGui::Text("rotate02");
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][0], rotateMatB.m[1][0], rotateMatB.m[2][0], rotateMatB.m[3][0]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][1], rotateMatB.m[1][1], rotateMatB.m[2][1], rotateMatB.m[3][1]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][2], rotateMatB.m[1][2], rotateMatB.m[2][2], rotateMatB.m[3][2]);
+		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][3], rotateMatB.m[1][3], rotateMatB.m[2][3], rotateMatB.m[3][3]);
+
 		ImGui::End();
 
 

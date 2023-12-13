@@ -575,15 +575,15 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 
 
 	result.m[0][0] = (axis.x * axis.x) * (1 - cosTheta) + cosTheta;
-	result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
-	result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
+	result.m[0][1] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
+	result.m[0][2] = (axis.x * axis.z) * (1 - cosTheta) + axis.y * sinTheta;
 
-	result.m[1][0] = (axis.x * axis.y) * (1 - cosTheta) - axis.z * sinTheta;
+	result.m[1][0] = (axis.x * axis.y) * (1 - cosTheta) + axis.z * sinTheta;
 	result.m[1][1] = (axis.y * axis.y) * (1 - cosTheta) + cosTheta;
-	result.m[1][2] = (axis.y * axis.z) * (1 - cosTheta) + axis.x * sinTheta;
+	result.m[1][2] = (axis.y * axis.z) * (1 - cosTheta) - axis.x * sinTheta;
 
-	result.m[2][0] = (axis.x * axis.z) * (1 - cosTheta) + axis.y * sinTheta;
-	result.m[2][1] = (axis.y * axis.z) * (1 - cosTheta) - axis.x * sinTheta;
+	result.m[2][0] = (axis.x * axis.z) * (1 - cosTheta) - axis.y * sinTheta;
+	result.m[2][1] = (axis.y * axis.z) * (1 - cosTheta) + axis.x * sinTheta;
 	result.m[2][2] = (axis.z * axis.z) * (1 - cosTheta) + cosTheta;
 
 
