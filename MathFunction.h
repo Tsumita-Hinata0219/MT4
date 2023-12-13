@@ -89,6 +89,10 @@ Matrix4x4 MakeRotateXYZMatrix(float radianX, float radianY, float radianZ);
 
 // 任意軸回転行列
 Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float cos, float sin);
+
+// ある方向からある方向への回転
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
 
 // 平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3 translate);
