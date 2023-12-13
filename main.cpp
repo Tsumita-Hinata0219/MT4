@@ -25,16 +25,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate = { 0.26f,0.0f,0.0f };
 
-	Vector3 fromA = Normalize(Vector3{ 1.0f, 0.7f, 0.5f });
-	Vector3 toA = vector::Multiply(-1.0f, fromA);
-	Vector3 fromB = Normalize(Vector3{ -0.6f, 0.9f, 0.2f });
-	Vector3 toB = Normalize(Vector3{ 0.4f, 0.7f, -0.5f });
 
-	Matrix4x4 rotateMat0 = DirectionToDirection(
-		Normalize(Vector3{ 1.0f, 0.0f, 0.0f }), Normalize(Vector3{ -1.0f, 0.0f, 0.0f })
-	);
-	Matrix4x4 rotateMatA = DirectionToDirection(fromA, toA);
-	Matrix4x4 rotateMatB = DirectionToDirection(fromB, toB);
+
+	Quaternion qA = { 2.0f, 3.0f, 4.0f, 1.0f };
+	Quaternion qB = { 1.0f, 3.0f, 5.0f, 2.0f };
+
+	Quaternion identity = quaternion::Identity();
+	Quaternion conj = quaternion::Conjugate(qA);
+	Quaternion inv = quaternion::Inverse(qA);
+	Quaternion normal = quaternion::Normalize(qA);
+	Quaternion mulA = quaternion::Multiply(qA, qB);
+	Quaternion mulB = quaternion::Multiply(qB, qA);
+	float norm = quaternion::Norm(qA);
 
 
 	
@@ -51,28 +53,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		ImGui::Begin("rotateMat0");
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][0], rotateMat0.m[1][0], rotateMat0.m[2][0], rotateMat0.m[3][0]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][1], rotateMat0.m[1][1], rotateMat0.m[2][1], rotateMat0.m[3][1]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][2], rotateMat0.m[1][2], rotateMat0.m[2][2], rotateMat0.m[3][2]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMat0.m[0][3], rotateMat0.m[1][3], rotateMat0.m[2][3], rotateMat0.m[3][3]);
+		ImGui::Begin("Quaternion");
+		ImGui::DragFloat4("Identity", &identity.x);
+		ImGui::DragFloat4("Conjugate", &conj.x);
+		ImGui::DragFloat4("Inverse", &inv.x);
+		ImGui::DragFloat4("Normalize", &normal.x);
+		ImGui::DragFloat4("Multiply(q1, q2)", &mulA.x);
+		ImGui::DragFloat4("Multiply(q2, q1)", &mulB.x);
+		ImGui::DragFloat("norm", &norm);
 		ImGui::End();
-		ImGui::Begin("rotateMat1");
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][0], rotateMatA.m[1][0], rotateMatA.m[2][0], rotateMatA.m[3][0]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][1], rotateMatA.m[1][1], rotateMatA.m[2][1], rotateMatA.m[3][1]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][2], rotateMatA.m[1][2], rotateMatA.m[2][2], rotateMatA.m[3][2]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatA.m[0][3], rotateMatA.m[1][3], rotateMatA.m[2][3], rotateMatA.m[3][3]);
-
-		ImGui::End();
-		ImGui::Begin("rotateMat2");
-		ImGui::Text("rotate02");
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][0], rotateMatB.m[1][0], rotateMatB.m[2][0], rotateMatB.m[3][0]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][1], rotateMatB.m[1][1], rotateMatB.m[2][1], rotateMatB.m[3][1]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][2], rotateMatB.m[1][2], rotateMatB.m[2][2], rotateMatB.m[3][2]);
-		ImGui::Text("%0.3f,%0.3f,%0.3f,%0.3f", rotateMatB.m[0][3], rotateMatB.m[1][3], rotateMatB.m[2][3], rotateMatB.m[3][3]);
-
-		ImGui::End();
-
 
 		///
 		/// ↑更新処理ここまで
@@ -82,9 +71,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrintf(10, 0, rotateMat0, "rotateMat0");
-		MatrixScreenPrintf(10, 120, rotateMatA, "rotateMat1");
-		MatrixScreenPrintf(10, 240, rotateMatB, "rotateMat2");
+
 
 		///
 		/// ↑描画処理ここまで

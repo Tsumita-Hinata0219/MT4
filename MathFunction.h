@@ -41,10 +41,13 @@ float Dot(const Vector3 v1, const Vector3 v2);
 
 // 長さ
 float Length(const Vector3 v);
+float Length(const Quaternion v);
 
 // 正規化
 Vector3 Normalize(const Vector3 v);
 
+// 座標変換
+Vector3 TransformByMatrix(const Vector3 vector, const Matrix4x4 matrix);
 
 // 行列
 namespace matrix {
@@ -57,10 +60,10 @@ namespace matrix {
 
 	// 乗算
 	Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
-}
 
-// 逆行列
-Matrix4x4 Inverse(const Matrix4x4& m);
+	// 逆行列
+	Matrix4x4 Inverse(const Matrix4x4& m);
+}
 
 // 転置行列
 Matrix4x4 Transpose(const Matrix4x4& m);
@@ -70,9 +73,6 @@ Matrix4x4 MakeIdentity4x4();
 
 // 平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3 translate);
-
-// 座標変換
-Vector3 TransformByMatrix(const Vector3 vector, const Matrix4x4 matrix);
 
 // 拡大縮小行列
 Matrix4x4 MakeScaleMatrix(const Vector3 scele);
@@ -93,6 +93,28 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float cos, float sin);
 
 // ある方向からある方向への回転
 Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
+
+// Quaternion
+namespace quaternion {
+
+	// Quaternionの積
+	Quaternion Multiply(const Quaternion& lhs, const Quaternion& rhs);
+
+	// 単位Quaternionを返す
+	Quaternion Identity();
+
+	// 共役Quaternionを返す
+	Quaternion Conjugate(const Quaternion& quaternion);
+
+	// Quaternionのnormを返す
+	float Norm(const Quaternion& quaternion);
+
+	// 正規化したQuaternionを返す
+	Quaternion Normalize(const Quaternion& quaternion);
+
+	// 逆Quatenionを返す
+	Quaternion Inverse(const Quaternion& quaternion);
+}
 
 // 平行移動行列
 Matrix4x4 MakeTranslateMatrix(const Vector3 translate);
