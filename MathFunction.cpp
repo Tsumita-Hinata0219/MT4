@@ -23,7 +23,6 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 }
 
 
-
 // 3次元ベクトル
 namespace vector {
 
@@ -62,6 +61,10 @@ namespace vector {
 // 内積
 float Dot(const Vector3 v1, const Vector3 v2) {
 	return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+}
+float Dot(const Quaternion& qA, const Quaternion& qB) {
+
+	return (qA.x * qB.x) + (qA.y * qB.y) + (qA.z * qB.z) + (qA.w * qB.w);
 }
 
 
@@ -746,6 +749,56 @@ namespace quaternion {
 			.y = qC.y / powNorm,
 			.z = qC.z / powNorm,
 			.w = qC.w / powNorm,
+		};
+
+
+		return result;
+	}
+
+
+	// 球面線形補間
+	Quaternion Slerp(const Quaternion& qA, const Quaternion& qB, float t) {
+
+		float quateDot = Dot(qA, qB);
+
+		Quaternion qO{};
+
+		if (quateDot < 0.0f) {
+			
+			qO = {
+				.x = -qA.x,
+				.y = -qA.y,
+				.z = -qA.z,
+				.w = -qA.w,
+			};
+
+			quateDot = -quateDot;
+		}
+
+		float theta = std::acos(quateDot);
+
+		float sinTheta = 1.0f / std::sin(theta);
+
+		float scaleA = std::sin((1.0f - t) * theta) * sinTheta;
+		float scaleB = std::sin(t * theta) * sinTheta;
+
+		Quaternion hrA = {
+			.x = qA.x * scaleA,
+			.y = qA.y * scaleA,
+			.z = qA.z * scaleA,
+			.w = qA.w * scaleA,
+		};
+		Quaternion hrB = {
+			.x = qB.x * scaleB,
+			.y = qB.y * scaleB,
+			.z = qB.z * scaleB,
+			.w = qB.w * scaleB,
+		};
+		Quaternion result = {
+			.x = hrA.x + hrB.x,
+			.y = hrA.y + hrB.y,
+			.z = hrA.z + hrB.z,
+			.w = hrA.w + hrB.w,
 		};
 
 

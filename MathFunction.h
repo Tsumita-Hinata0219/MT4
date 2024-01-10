@@ -22,6 +22,10 @@ void VectorScreenPrintf(int x, int y, const Vector3 vector, const char* label);
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label);
 
 
+inline Quaternion operator*(const Quaternion& a, const float b);
+inline Quaternion& operator*=(Quaternion& a, float b);
+inline Quaternion operator+ (const Quaternion& a, const Quaternion& b);
+
 
 // 3次元ベクトル
 namespace vector {
@@ -38,6 +42,7 @@ namespace vector {
 
 // 内積
 float Dot(const Vector3 v1, const Vector3 v2);
+float Dot(const Quaternion& qA, const Quaternion& qB);
 
 // 長さ
 float Length(const Vector3 v);
@@ -114,6 +119,9 @@ namespace quaternion {
 
 	// 逆Quatenionを返す
 	Quaternion Inverse(const Quaternion& quaternion);
+
+	// 球面線形補間
+	Quaternion Slerp(const Quaternion& qA, const Quaternion& qB, float t);
 }
 
 // 任意軸回転を表すQuaternionの生成

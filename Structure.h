@@ -68,6 +68,6 @@ struct OBB {
 struct Quaternion {
 	float x;
 	float y;
-	float z; 
+	float z;
 	float w;
 };

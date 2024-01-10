@@ -26,14 +26,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraRotate = { 0.26f,0.0f,0.0f };
 
 
+	Quaternion rotation0 = MakeRotateAxisAngleQuatenion({ 0.71f, 0.71f, 0.0f }, 0.3f);
+	Quaternion rotation1 = MakeRotateAxisAngleQuatenion({ 0.71f, 0.0f, 0.71f }, 3.141592f);
 
-	Quaternion rotation = MakeRotateAxisAngleQuatenion(
-		Normalize(Vector3{ 1.0f, 0.4f, -0.2f }), 0.45f);
-
-	Vector3 pointY = { 2.1f, -0.9f, 1.3f };
-	Matrix4x4 rotateMat = MakeRotateMatrix(rotation);
-	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
-	Vector3 rotateByMat = TransformByMatrix(pointY, rotateMat);
+	Quaternion interpolate0 = quaternion::Slerp(rotation0, rotation1, 0.0f);
+	Quaternion interpolate1 = quaternion::Slerp(rotation0, rotation1, 0.3f);
+	Quaternion interpolate2 = quaternion::Slerp(rotation0, rotation1, 0.5f);
+	Quaternion interpolate3 = quaternion::Slerp(rotation0, rotation1, 0.7f);
+	Quaternion interpolate4 = quaternion::Slerp(rotation0, rotation1, 1.0f);
 
 	
 	// ウィンドウの×ボタンが押されるまでループ
@@ -49,17 +49,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 		
-		ImGui::Begin("01_04");
-		ImGui::DragFloat4("Rotation", &rotation.x);
-		ImGui::Text("RotateMat");
-		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[0][0], rotateMat.m[0][1], rotateMat.m[0][2], rotateMat.m[0][3]);
-		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[1][0], rotateMat.m[1][1], rotateMat.m[1][2], rotateMat.m[1][3]);
-		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[2][0], rotateMat.m[2][1], rotateMat.m[2][2], rotateMat.m[2][3]);
-		ImGui::Text(" %0.3f,  %0.3f,  %0.3f,  %0.3f", rotateMat.m[3][0], rotateMat.m[3][1], rotateMat.m[3][2], rotateMat.m[3][3]);
-		ImGui::DragFloat3("rotateByQuaternioon", &rotateByQuaternion.x);
-		ImGui::DragFloat3("rotateByMat", &rotateByMat.x);
+		ImGui::Begin("01_05");
+		ImGui::DragFloat4("interpolate0 : Slerp(q0, q1, 0.0f)", &interpolate0.x);
+		ImGui::DragFloat4("interpolate1 : Slerp(q0, q1, 0.3f)", &interpolate1.x);
+		ImGui::DragFloat4("interpolate2 : Slerp(q0, q1, 0.5f)", &interpolate2.x);
+		ImGui::DragFloat4("interpolate3 : Slerp(q0, q1, 0.7f)", &interpolate3.x);
+		ImGui::DragFloat4("interpolate4 : Slerp(q0, q1, 1.0f)", &interpolate4.x);
 		ImGui::End();
-	
+
 		///
 		/// ↑更新処理ここまで
 		///
