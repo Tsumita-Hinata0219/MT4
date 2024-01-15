@@ -23,7 +23,7 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 
 
 inline Quaternion operator*(const Quaternion& a, const float b);
-inline Quaternion& operator*=(Quaternion& a, float b);
+inline Quaternion operator*(const float b, const Quaternion& a);
 inline Quaternion operator+ (const Quaternion& a, const Quaternion& b);
 
 

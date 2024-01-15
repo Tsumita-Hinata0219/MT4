@@ -22,6 +22,16 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 	}
 }
 
+inline Quaternion operator*(const Quaternion& a, const float b) {
+	return { a.x * b, a.y * b, a.z * b, a.w * b };
+}
+inline Quaternion operator*(const float b, const Quaternion& a) {
+	return { b * a.x, b * a.y, b * a.z, b * a.w };
+}
+inline Quaternion operator+ (const Quaternion& a, const Quaternion& b) {
+	return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+}
+
 
 // 3次元ベクトル
 namespace vector {
@@ -775,6 +785,12 @@ namespace quaternion {
 			quateDot = -quateDot;
 		}
 
+		constexpr float EPSILON = 0.0001f;
+		if (quateDot >= 1.0f - EPSILON) {
+			return (1.0f - t) * qO + t * qB;
+		}
+
+
 		float theta = std::acos(quateDot);
 
 		float sinTheta = 1.0f / std::sin(theta);
@@ -805,6 +821,8 @@ namespace quaternion {
 		return result;
 	}
 }
+
+
 
 
 // 任意軸回転を表すQuaternionの生成
